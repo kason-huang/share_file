@@ -1,0 +1,20 @@
+# data_recipe.yaml
+version: 1
+sources:
+- name: HM3D
+version: v1.0
+split: train
+weight: 0.7
+- name: SynthTraj
+generator: gpt-nav-v2
+quality_filter: score>=0.8
+weight: 0.3
+shaping:
+length_bins: { short: [0,10], mid: [10,20], long: [20,999] }
+target_mix: { short: 0.33, mid: 0.33, long: 0.34 }
+max_importance_weight: 5.0
+sampling:
+strategy: stratified
+curriculum:
+- {stage: 1, max_len: 14}
+- {stage: 2, max_len: 22}
