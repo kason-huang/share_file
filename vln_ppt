@@ -1,0 +1,43 @@
+关键链接：https://internrobotics.shlab.org.cn/largemodel.html
+InterNav: 具身导航模型训测工具链
+整体架构
+说明支持的具身导航模型（Model Zoo）然后去牵引出下面说Model Zool
+支持的Benchmark，牵引出支持的数据集还有自己弄的数据集（VLN-PE、Interna N1）
+
+
+具身导航模型（Model Zoo）
+System2：
+System1：
+Whole-System： 
+每个一个例子
+1. InternVLA-N1: 基于第一视角的首个双系统端到端导航大模型
+2. StreamVLN: 流式导航大模型迈向在线推理和长时记忆
+3. NavDP: “一脑多形” 通用导航扩散策略
+
+
+Benchmark
+https://github.com/InternRobotics/InternNav
+System 2支持
+System 1支持
+Whole-System支持
+评价指标支持
+
+
+InternVLA-N1: 基于第一视角的首个双系统端到端导航大模型 （附录细化？）
+https://internrobotics.github.io/internvla-n1.github.io/
+一句话总结：融合超长程指令跟随和密集动态环境避障能力异步丝滑推理
+模型结构
+训测流程
+结果
+
+
+StreamVLN: 流式导航大模型迈向在线推理和长时记忆（VLN的细节放附录说明）
+https://streamvln.github.io/
+一句话总结：纯仿真数据训练统一流式推理框架实现高效训练和零样本泛化
+有一个动态的模型结构图
+
+
+NavDP: “一脑多形” 通用导航扩散策略
+https://wzcai99.github.io/navigation-diffusion-policy.github.io/
+一句话总结：虚实贯通高效训练实现跨本体跨场景密集动态环境避障
+模型结构
