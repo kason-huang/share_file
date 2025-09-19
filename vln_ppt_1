@@ -1,0 +1,107 @@
+# InternNav Architecture - Slide Version
+
+## 🏗️ Core Architecture Overview
+
+```
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                           InternNav Architecture                           │
+├─────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                 │
+│  ┌─────────────────────────────────────────────────────────────────────────┐   │
+│  │                        Application Layer                                │   │
+│  │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐   │   │
+│  │  │Training     │  │Evaluation   │  │Model Zoo    │  │Analysis     │   │   │
+│  │  │System       │  │System       │  │Management   │  │System       │   │   │
+│  │  │             │  │             │  │             │  │             │   │   │
+│  │  •Resource    │  •HTTP Server  │  •Model       │  •Metrics     │   │   │
+│  │  •Allocation  │  •Client Comm  │  •Registry     │  •Analysis     │   │   │
+│  │  •Training    │  •Health Mon   │  •Download     │  •Visualization│   │   │
+│  │  •Monitor     │  •Auto Restart │  •Versioning   │  •Reporting    │   │   │
+│  │  └─────────────┘  └─────────────┘  └─────────────┘  └─────────────┘   │   │
+│  └─────────────────────────────────────────────────────────────────────────┘   │
+│                                    │                                        │
+│  ┌─────────────────────────────────────────────────────────────────────────┐   │
+│  │                      Processing Layer                                   │   │
+│  │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐   │   │
+│  │  │Training     │  │Evaluation   │  │Data         │  │Benchmark    │   │   │
+│  │  │Orchestrator │  │Orchestrator │  │Pipeline     │  │Manager      │   │   │
+│  │  │             │  │             │  │             │  │             │   │   │
+│  │  •Distributed │  •Agent Comm  │  •Feature     │  •VLN-CE      │   │   │
+│  │  •Training    │  •Env Mgmt    │  •Extraction   │  •VLN-PE      │   │   │
+│  │  •Loop        │  •Metrics     │  •Transform   │  •PointGoal    │   │   │
+│  │  •Checkpoint │  •Collection  │  •Storage     │  •Comparison   │   │   │
+│  │  └─────────────┘  └─────────────┘  └─────────────┘  └─────────────┘   │   │
+│  └─────────────────────────────────────────────────────────────────────────┘   │
+│                                    │                                        │
+│  ┌─────────────────────────────────────────────────────────────────────────┐   │
+│  │                      Core Component Layer                              │   │
+│  │                                                                         │   │
+│  │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐   │   │
+│  │  │Model Zoo    │  │Agent        │  │Trainer      │  │Environment  │   │   │
+│  │  │             │  │Components   │  │Components   │  │Components   │   │   │
+│  │  │             │  │             │  │             │  │             │   │   │
+│  │  •InternVLA   │  •Base Agent  │  •Base Trainer│  •VLN PE Env  │   │   │
+│  │  •StreamVLN   │  •RDP Agent   │  •CMA Trainer │  •Multi Env   │   │   │
+│  │  •RDP/NavDP   │  •CMA Agent   │  •RDP Trainer │  •Base Env    │   │   │
+│  │  •iPlanner    │  •VLA Agent   │  •NavDP Trainer│  •Multi-Sim    │   │   │
+│  │  •ViPlanner   │  •State Mgmt  │  •Optimization│  •Interface    │   │   │
+│  │  •GNM/NoMad  │  └─────────────┘  └─────────────┘  └─────────────┘   │   │
+│  └─────────────┘                                                            │   │
+│                                    │                                        │
+│  ┌─────────────────────────────────────────────────────────────────────────┐   │
+│  │                 Dataset & Simulation Layer                            │   │
+│  │                                                                         │   │
+│  │  ┌─────────────────────────┐  ┌─────────────────────────────────────┐   │   │
+│  │  │      Dataset Ecosystem   │  │        Multi-Simulator Backend      │   │   │
+│  │  │                         │  │                                     │   │
+│  │  •InternData-N1 (3k+ scns)│  •Isaac Sim (Unitree H1, Physics)     │   │   │
+│  │  •VLN-CE (R2R/RxR)       │  •Habitat (Photo-real, Large Scale)    │   │   │
+│  │  •VLN-PE (Flash/Physical) │  •InternUtopia (Navigation, Benchmark) │   │   │
+│  │  •PointGoal (Cluttered/   │  •Gym/PyBullet (Physics, Fast)        │   │   │
+│  │  │  InternScenes)         │  •Custom Sims (Extensible)              │   │   │
+│  │  •InteriorNav (Kujiale)  │                                     │   │   │
+│  │  •GRScenes-100            │                                     │   │   │
+│  │  •MP3D Scenes             │                                     │   │   │
+│  │  └─────────────────────────┘  └─────────────────────────────────────┘   │   │
+│  └─────────────────────────────────────────────────────────────────────────┘   │
+│                                    │                                        │
+│  ┌─────────────────────────────────────────────────────────────────────────┐   │
+│  │                    Infrastructure Layer                                 │   │
+│  │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐   │   │
+│  │  │Storage      │  │Communication│  │Compute      │  │Monitoring   │   │   │
+│  │  │             │  │             │  │             │  │             │   │   │
+│  │  •LMDB        │  •HTTP/TCP    │  •CUDA        │  •Logging     │   │   │
+│  │  •LeRobot     │  •FastAPI     │  •Multi-GPU   │  •Metrics     │   │   │
+│  │  •Checkpoints │  •REST API    │  •Optimization│  •Health      │   │   │
+│  │  •Results     │  •Serialization│  •Memory Mgmt │  •Performance │   │   │
+│  │  └─────────────┘  └─────────────┘  └─────────────┘  └─────────────┘   │   │
+│                                                                                 │
+└─────────────────────────────────────────────────────────────────────────────────┘
+```
+
+## 🔑 Key Features
+
+### **Model Zoo**
+- **10+ Navigation Models**: InternVLA, StreamVLN, RDP, CMA, etc.
+- **Version Management**: Automatic model registration and versioning
+- **Download Hub**: Centralized model distribution
+
+### **Multi-Dataset Support**
+- **6 Datasets & Benchmarks**: VLN-CE, VLN-PE, PointGoal, etc.
+- **830k VLN Data**: Largest navigation dataset collection
+- **LeRobot Format**: Standardized robot learning data format
+
+### **Multi-Simulator Compatibility**
+- **4 Simulation Backends**: Isaac Sim, Habitat, InternUtopia, Gym
+- **Unified API**: Single interface for all environments
+- **Zero Code Changes**: Seamlessly switch between simulators
+
+### **Benchmark System**
+- **Standardized Metrics**: SR, SPL, NE, OS, etc.
+- **Cross-Model Comparison**: Automated performance evaluation
+- **Challenge Support**: IROS 2025 competition ready
+
+### **Scalable Architecture**
+- **HTTP Client-Server**: Decoupled training and evaluation
+- **Distributed Training**: Multi-GPU support for large models
+- **Container Deployment**: Docker and cloud-native deployment
