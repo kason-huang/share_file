@@ -1,0 +1,9 @@
+名称,类型,描述,对应系统类型,对应指标
+R2R（Room-to-Room）,数据集,大规模室内导航数据集，包含人类指令和路径。,System 2,"SR, SPL, NE"
+RxR（Room-across-Room）,数据集,大规模多语言数据集，包含精细对齐的室内导航任务。,System 2,"SR, SPL, NE"
+Cluttered Envs,数据集,拥挤的室内环境，具有大量障碍物和复杂布局。,System 1,"SR, SPL"
+GRScenes-100,数据集,高保真合成室内场景，适用于PointGoal导航任务。,System 1,"SR, SPL"
+InternScenes,数据集,大规模物理仿真室内场景，支持交互对象。,System 1,"SR, SPL"
+VLN-CE,基准（VLN-CE）,面向连续环境的视觉语言导航任务，评估高层推理能力。,System 2,"SR, SPL, NE, OS, FR, StR"
+VLN-PE,基准（VLN-PE）,物理环境下的视觉语言导航基准，评估真实世界执行。,Whole System,"SR, SPL, NE, OS, FR, StR"
+PointGoal导航,基准（VN）,以PointGoal为任务，从起点到达目标的导航任务。,System 1,"SR, SPL"
