@@ -1,0 +1,49 @@
+  Top-level Structure
+
+  - episodes: List of 155,098 navigation episodes (largest dataset so far)
+  - instruction_vocab: Empty vocabulary structure (all fields are empty/None)
+
+  Individual Episode Structure
+
+  Each episode contains the same basic structure as R2R and EnvDrop, but with some key differences:
+
+  - episode_id: Unique identifier (integer, starts from 0)
+  - trajectory_id: Complex ID string with pattern scalevln_{scene_id}__fake_{start}_{end}
+  - scene_id: HM3D scene identifier (format: "hm3d/{scene_id}/{scene_id}.basis.glb")
+  - start_position: Starting coordinates [x, y, z] (list of floats)
+  - start_rotation: Starting orientation [x, y, z, w] (list of floats)
+  - goals: Target position with radius (list of dict with 'position' and 'radius')
+  - info: Always contains None for geodesic_distance
+  - instruction: Navigation instruction containing:
+    - instruction_text: Natural language instruction string (present)
+    - instruction_tokens: Always None (not tokenized)
+  - reference_path: Optimal path coordinates (list of [x, y, z] positions)
+
+  Key Differences from Other Datasets
+
+  1. Missing Data:
+    - No geodesic_distance values (all None)
+    - No tokenized instructions (all None)
+    - Empty vocabulary structure
+  2. Scene Type: Uses HM3D (Habitat-Matterport 3D) scenes instead of MP3D
+  3. Trajectory ID Pattern: Complex naming with scalevln_ prefix and __fake_ suffix
+  4. Goal Radius: Consistently 0.25 meters (much smaller than R2R/EnvDrop's 3.0m)
+  5. Scale: 155,098 episodes (largest dataset examined)
+
+  Sample Data
+
+  - Instruction: "turn around and walk out of the bedroom . turn right and walk down the stairs . stop
+   at the bottom of the stairs ."
+  - Start position: [6.18, 0.07, 1.75]
+  - Goal position: [-0.08, -2.53, 0.07] (significant elevation change)
+  - Success radius: 0.25 meters (much more precise)
+  - Reference path: 7 waypoints showing multi-level navigation
+
+  Dataset Characteristics
+
+  - Scene format: Uses .basis.glb files (compressed 3D format)
+  - Navigation complexity: Multi-level navigation with stairs
+  - Trajectory naming: Suggests synthetic or augmented data ("fake" in IDs)
+  - Precision: Much smaller success radius indicates more precise navigation tasks
+
+  The ScaleVLN dataset appear
