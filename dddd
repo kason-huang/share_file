@@ -1,61 +1,16 @@
-  The RxR (Room-to-Room Extended) dataset in the data/datasets/rxr/train/ directory contains three 
-  main files with a total size of 187 MB:
+  Key Differences Summary
 
-  1. train_follower.json.gz (61.0 MB)
-  - Structure: Dictionary with single key 'episodes' containing list of 58,752 episodes
-  - Content: Follower agent navigation episodes
-  - Key Features:
-    - Multi-lingual instructions (English, Hindi, Telugu)
-    - Detailed timing information in instructions
-    - MP3D scene environments
-    - Reference paths for navigation
+  | Aspect           | train_follower       | train_guide_gt         | train_guide       |
+  |------------------|----------------------|------------------------|-------------------|
+  | Agent Type       | Instruction follower | Expert demonstrator    | Instruction guide |
+  | Data Format      | Full episodes        | Expert trajectories    | Full episodes     |
+  | Instructions     | ✅ Multi-lingual     | ❌ None               | ✅ Multi-lingual  |
+  | Navigation Paths | ✅ Reference paths   | ✅ Expert actions     | ✅ Agent paths    |
+  | Structure        | List of episodes     | Dict by instruction ID | List of episodes  |
+  | Timing Info      | ✅ Detailed timing    | ❌ None              | ✅ Available      |
+  | Total Items      | 58,752 episodes      | 60,300 entries         | 60,300 episodes   |
 
-  2. train_guide_gt.json.gz (73.4 MB)
-  - Structure: Dictionary with 60,300 entries keyed by instruction IDs
-  - Content: Ground truth expert demonstrations
-  - Key Features:
-    - Contains locations, actions, forward_steps
-    - Expert trajectory data
-    - Action sequences for navigation
-
-  3. train_guide.json.gz (52.7 MB)
-  - Structure: Dictionary with single key 'episodes' containing list of 60,300 episodes
-  - Content: Guide agent navigation episodes
-  - Key Features:
-    - Similar structure to follower but for guide navigation
-    - Contains trajectory information and role data
-
-  Individual Episode Structure
-  Each episode contains:
-  - episode_id: Unique identifier
-  - trajectory_id: Trajectory identifier
-  - scene_id: MP3D scene identifier
-  - instruction: Rich instruction data including:
-    - instruction_id: Unique instruction identifier
-    - instruction_text: Natural language instruction
-    - language: Language code (en-US, hi-IN, en-IN, te-IN)
-    - annotator_id: Annotator information
-    - edit_distance: Edit distance metrics
-    - timed_instruction: Time-segmented instruction (54 segments average)
-  - start_position: Starting coordinates [x, y, z]
-  - start_rotation: Starting orientation quaternion
-  - goals: Target positions with radius
-  - reference_path: Optimal navigation path
-  - info: Additional metadata including role information
-
-  Key Statistics
-  - Total episodes: 58,752 (follower) + 60,300 (guide) = 119,052 total
-  - Languages: English (US), English (India), Hindi, Telugu
-  - Scenes: MP3D environments with ~53 unique scenes in sample
-  - Path lengths: 1-64 waypoints (average ~11-12)
-  - Instruction length: 13-339 words (average ~76 words)
-
-  Unique Features
-  1. Multi-lingual support: Instructions in multiple Indian languages
-  2. Dual agent perspective: Both follower and guide agent data
-  3. Timing information: Detailed temporal segmentation of instructions
-  4. Expert demonstrations: Ground truth action sequences
-  5. Cultural adaptation: Different language variants for the same navigation tasks
-
-  The RxR dataset represents a significant extension of the original R2R dataset with multilingual
-  capabilities and more detailed annotation for vision-and-language navigation research.
+  Usage in Training
+  - train_follower: Train agents to follow navigation instructions
+  - train_guide_gt: Train agents to mimic expert navigation patterns
+  - train_guide: Train agents to provide navigation guidance
