@@ -1,0 +1,39 @@
+R2R-Val_unseen-运行结果
+评估概览
+- 运行命令：
+export DATA_PATH=/mnt/sfs_turbo/data-platform/
+docker compose -f .docker/docker-compose.yml -f .docker/docker-compose.streamvln.yml up -d
+docker compose -f .docker/docker-compose.yml -f .docker/docker-compose.streamvln.yml stop
+docker exec -it streamvln bash
+bash scripts/vln_eval_multi_gpu.sh
+- 数据集: R2R Room-to-Room
+- 验证集: val_unseen
+- 模型: StreamVLN
+- 总评估片段: 1,839 个
+- 评估时间: 2025年9月30日 - 10月1日
+核心性能指标
+暂时无法在飞书文档外展示此内容
+按场景分析
+表现最佳的场景 (成功率>60%):
+- X7HyMhZNoso: 65.25% 成功率，平均导航误差仅3.43米
+- 8194nk5LbLH: 61.54% 成功率
+- TbHJrupSAjP: 57.95% 成功率，平均导航误差4.72米
+表现较弱的场景 (成功率<50%):
+- oLBMNvg9in8: 42.37% 成功率，碰撞次数高达21.56次
+- Z6MFQCViBuw: 49.06% 成功率，平均导航误差9.62米
+关键发现
+1. 导航能力: 模型在约一半的场景中能够成功导航到目标位置，显示出基本的语言理解和空间导航能力。
+2. 路径效率: SPL (0.4857) 低于成功率 (0.5345)，表明模型在找到最优路径方面仍有改进空间。
+3. 碰撞问题: 平均每片段10.28次碰撞表明模型在障碍物避让方面需要优化。
+4. 场景依赖性: 不同场景的性能差异显著，说明模型在某些环境布局中表现更好。
+可视化输出
+- 生成了1,841个片段的可视化数据
+- 每个片段包含:
+  - actions.json: 模型预测的动作序列
+  - actions_human.json: 人类参考动作序列
+  - frames/: 导航过程中的第一人称视角图像帧
+建议
+1. 减少碰撞: 改进障碍物检测和避让策略
+2. 路径优化: 提升路径规划效率以改善SPL指标
+3. 场景泛化: 针对表现较弱的环境场景进行专项优化
+4. 长距离导航: 重点解决导航误差随距离增加的问题
