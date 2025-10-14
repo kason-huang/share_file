@@ -1,50 +1,61 @@
-{
-    'episodes' = [
-        {
-            'episode_id': 1,
-            'trajectory_id': 4,
-            'scene_id': 'mp3d/7y3sRwLe3Va/7y3sRwLe3Va.glb',
-            'instruction': {
-                'instruction_text': 'Go around the right side...',
-                'instruction_tokens': [982, 141, 2202, ..., 0, 0, 0]
-            },
-            'start_position': [-16.267200469970703, 0.1518409252166748, 0.7207760214805603],
-            'start_rotation': [0.0, 0.0007963267107332633, 0.0, 0.9999996829318346],
-            'goals': [
-                {
-                    'position': [-12.337400436401367, 0.1518409252166748, 4.213699817657471],
-                    'radius': 3.0
-                }
-            ],
-            'reference_path': [
-                [-16.267200469970703, 0.1518409252166748, 0.7207760214805603],
-                [-16.284099578857422, 0.1518409252166748, 2.4123699665069580],
-                ...
-                [-13.907199859619140, 0.1518409252166748, 4.2282099723815920],
-            ],
-            'info': {'geodesic_distance': 6.425291538238525},
-        },
-        ...
-    ],
-    'instruction_vocab': [
-        'word_list': [..., 'orchids', 'order', 'orient', ...],
-        'word2idx_dict': {
-            ...,
-            'orchids': 1505,
-            'order': 1506,
-            'orient': 1507,
-            ...
-        },
-        'itos': [..., 'orchids', 'order', 'orient', ...],
-        'stoi': {
-            ...,
-            'orchids': 1505,
-            'order': 1506,
-            'orient': 1507,
-            ...
-        },
-        'num_vocab': 2504,
-        'UNK_INDEX': 1,
-        'PAD_INDEX': 0,
-    ]
-}
+  The RxR (Room-to-Room Extended) dataset in the data/datasets/rxr/train/ directory contains three 
+  main files with a total size of 187 MB:
+
+  1. train_follower.json.gz (61.0 MB)
+  - Structure: Dictionary with single key 'episodes' containing list of 58,752 episodes
+  - Content: Follower agent navigation episodes
+  - Key Features:
+    - Multi-lingual instructions (English, Hindi, Telugu)
+    - Detailed timing information in instructions
+    - MP3D scene environments
+    - Reference paths for navigation
+
+  2. train_guide_gt.json.gz (73.4 MB)
+  - Structure: Dictionary with 60,300 entries keyed by instruction IDs
+  - Content: Ground truth expert demonstrations
+  - Key Features:
+    - Contains locations, actions, forward_steps
+    - Expert trajectory data
+    - Action sequences for navigation
+
+  3. train_guide.json.gz (52.7 MB)
+  - Structure: Dictionary with single key 'episodes' containing list of 60,300 episodes
+  - Content: Guide agent navigation episodes
+  - Key Features:
+    - Similar structure to follower but for guide navigation
+    - Contains trajectory information and role data
+
+  Individual Episode Structure
+  Each episode contains:
+  - episode_id: Unique identifier
+  - trajectory_id: Trajectory identifier
+  - scene_id: MP3D scene identifier
+  - instruction: Rich instruction data including:
+    - instruction_id: Unique instruction identifier
+    - instruction_text: Natural language instruction
+    - language: Language code (en-US, hi-IN, en-IN, te-IN)
+    - annotator_id: Annotator information
+    - edit_distance: Edit distance metrics
+    - timed_instruction: Time-segmented instruction (54 segments average)
+  - start_position: Starting coordinates [x, y, z]
+  - start_rotation: Starting orientation quaternion
+  - goals: Target positions with radius
+  - reference_path: Optimal navigation path
+  - info: Additional metadata including role information
+
+  Key Statistics
+  - Total episodes: 58,752 (follower) + 60,300 (guide) = 119,052 total
+  - Languages: English (US), English (India), Hindi, Telugu
+  - Scenes: MP3D environments with ~53 unique scenes in sample
+  - Path lengths: 1-64 waypoints (average ~11-12)
+  - Instruction length: 13-339 words (average ~76 words)
+
+  Unique Features
+  1. Multi-lingual support: Instructions in multiple Indian languages
+  2. Dual agent perspective: Both follower and guide agent data
+  3. Timing information: Detailed temporal segmentation of instructions
+  4. Expert demonstrations: Ground truth action sequences
+  5. Cultural adaptation: Different language variants for the same navigation tasks
+
+  The RxR dataset represents a significant extension of the original R2R dataset with multilingual
+  capabilities and more detailed annotation for vision-and-language navigation research.
