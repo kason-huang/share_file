@@ -1,0 +1,56 @@
+  Top-level Structure
+
+  - episodes: List of 146,304 navigation episodes (much larger than R2R)
+  - instruction_vocab: Vocabulary dictionary with 2,504 words
+
+  Individual Episode Structure
+
+  Each episode contains the same structure as R2R:
+  - episode_id: Unique identifier (integer)
+  - trajectory_id: Trajectory identifier (integer)
+  - scene_id: 3D scene identifier (string, format: "mp3d/{scene_id}/{scene_id}.glb")
+  - start_position: Starting coordinates [x, y, z] (list of floats)
+  - start_rotation: Starting orientation [x, y, z, w] (list of floats)
+  - goals: Target position with radius (list of dict with 'position' and 'radius')
+  - info: Additional metadata including 'geodesic_distance'
+  - instruction: Navigation instruction containing:
+    - instruction_text: Natural language instruction string
+    - instruction_tokens: Tokenized instruction using vocabulary indices (with padding)
+  - reference_path: Optimal path coordinates (list of [x, y, z] positions)
+
+  Instruction Vocabulary
+
+  - word_list: Complete vocabulary of 2,504 words
+  - word2idx_dict: Word-to-index mapping
+  - stoi: String-to-index mapping (same as word2idx_dict)
+  - itos: Index-to-string mapping
+  - num_vocab: Vocabulary size (2,504)
+  - UNK_INDEX: Unknown token index (1)
+  - PAD_INDEX: Padding token index (0)
+
+  Sample Data
+
+  - Instruction: "walk past the table and chairs and turn right . walk up the stairs and stop at the
+  top of the stairs ."
+  - Start position: [2.74, 0.09, -9.06]
+  - Goal position: [4.86, 2.61, -10.89] (note: height change indicates multi-level navigation)
+  - Geodesic distance: 10.45 meters
+  - Reference path: 7 waypoints showing multi-level navigation
+
+  Key Differences from R2R
+
+  1. Much larger dataset: 146,304 episodes vs 10,819 in R2R
+  2. Smaller vocabulary: 2,504 words vs 2,711 in R2R
+  3. Longer instructions: Multi-sentence instructions with padding
+  4. Multi-level navigation: Instructions involving stairs and elevation changes
+  5. Structured vocabulary: Separate stoi/itos mappings plus UNK_INDEX/PAD_INDEX
+
+  Dataset Statistics
+
+  - Distance range: 3.46m - 30.71m (sampled from first 1,000 episodes)
+  - Path length range: 5-7 waypoints (more consistent than R2R)
+  - Scene coverage: Uses MP3D scenes like R2R
+
+  The EnvDrop dataset appears to be an augmented or expanded version of R2R with more episodes,
+  multi-level navigation scenarios, and structured tokenization with explicit padding and unknown
+  token handling.
