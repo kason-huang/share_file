@@ -1,7 +1,143 @@
-指标	数值	说明
-成功率 (Success Rate)	53.45%	成功到达目标位置的比例
-SPL (Success weighted by Path Length)	0.4857	考虑路径效率的成功率
-OS (Oracle Success)	0.5987	预测路径与最短路径的重叠度
-平均导航误差 (Navigation Error)	5.36米	距离目标位置的平均误差
-平均碰撞次数	10.28次	每个片段的平均碰撞数
-平均步数	73.19步	每个片段的平均行动步数
+训练流程概述
+
+StreamVLN采用三阶段训练策略：
+1. Stage-one: 预训练阶段（有监督训练）
+2. Dagger Collection: 数据收集阶段
+3. Stage-two: 联合训练阶段（有监督训练）
+
+第一阶段：预训练 (Stage-one)
+只用 oracle 轨迹微调 1 个 epoch
+使用数据集 （132G）
+- R2R (Room-to-Room): data/trajectory_data/R2R 
+- RxR (Room-across-Room): data/trajectory_data/RxR
+- EnvDrop: data/trajectory_data/EnvDrop
+数据特点: 预收集的观察-动作对序列
+训练配置:
+- group_by_task=False
+- multi_task_training=False（未启用）
+- 单任务训练，专注于 VLN 任务
+
+关键配置
+- 基础模型: lmms-lab/LLaVA-Video-7B-Qwen2
+- 视觉编码器: google/siglip-so400m-patch14-384
+- 训练轮数: 1 epoch
+- 序列长度: 32768 tokens
+- 视频帧数: 32 frames
+- 历史步数: 8 steps
+- 未来步数: 4 steps
+
+训练参数
+learning_rate: 2e-5
+mm_vision_tower_lr: 5e-6
+per_device_train_batch_size: 2
+gradient_accumulation_steps: 2
+warmup_ratio: 0.075
+lr_scheduler_type: cosine_with_min_lr
+
+命令：Stage-1：sbatch scripts/streamvln_train_slurm.sh
+
+第二阶段：Dagger数据收集
+用 stage-1 模型在环境中 rollout，利用 Habitat 的最短路专家做纠偏，收集 24 万样本
+数据集配置
+- 主要数据集: R2R, RxR, EnvDrop
+- 数据路径: data/datasets/r2r/train/train.json.gz
+- 标注路径: data/trajectory_data/R2R_V1-3/annotations.json
+
+Dagger参数
+- 更新大小: 160,000 samples
+- 提交频率: 每50次更新提交一次
+- 模型推理概率: 0 (纯专家数据收集)
+- 数据迭代: 3次
+
+环境配置
+- 最大步数: 500 steps
+- 成功距离: 3.0 meters
+- 传感器配置: RGB(640x480) + Depth(640x480)
+- 步长: 0.25 meters
+- 转角: 15 degrees
+
+命令：DAgger 采集：sh scripts/streamvln_dagger_collect.sh
+
+第三阶段：联合训练 (Stage-two)
+在 VLA + DAgger + 通用多模数据（视频 QA、MMC4 图文）的混合上继续训练 1 个 epoch
+多任务数据集
+1. VLN导航数据 (???)
+- 预训练轨迹数据: R2R, RxR, EnvDrop
+- Dagger收集数据: data/dagger_data/{R2R,RxR,EnvDrop}
+
+2. 视频问答数据 (LLaVA-Video-178K)(1.28TB)
+- 学术视频: 0-30秒和30-60秒视频问答数据
+- YouTube视频: 随机采样140,000个样本
+- 数据子集: NextQA, ActivityNet, Ego4D, Charades
+
+3. 3D场景问答 (ScanQA) （需要发送申请）
+- ScanNet标注: scanqa_annotations.json
+- 3D问答标注: sqa3d_annotations.json
+
+4. 大规模图文对齐 (MMC4)（20G）
+- 核心数据: MMC4-core/
+- 采样策略: 最后1400个样本
+
+联合训练配置
+- 任务分组: 启用 group_by_task=True
+- 多任务训练: 启用 multi_task_training=True
+- 任务ID分配:
+- 导航任务: 0
+- 视频问答: 1
+- 3D问答: 2
+- 图文对齐: 3
+
+训练超参数
+learning_rate: 2e-5
+mm_vision_tower_lr: 5e-6
+warmup_ratio: 0.03
+lr_scheduler_type: cosine
+num_train_epochs: 1
+model_max_length: 32768
+
+模型架构配置
+可训练模块
+- mm_tunable_parts="mm_vision_tower,mm_mlp_adapter,mm_language_model"
+- 视觉编码器、多模态投影器、语言模型同时训练
+
+视觉处理
+- 图像分辨率: 任意分辨率，最大9宫格 (1x1) 到 (6x6)
+- 视频采样: 均匀采样32帧
+- 数据增强: 颜色抖动、随机后处理、锐化调整
+
+上下文管理
+- 历史窗口: 8步对话历史
+- 未来预测: 4步动作预测
+- 记忆机制: Token pruning for long sequences
+
+分布式训练配置
+硬件配置
+- 节点数: 4 nodes
+- GPU数: 8 GPUs per node
+- 总批大小: 64 (4 nodes × 8 GPUs × 2 batch size)
+
+优化设置
+- 混合精度: BF16训练
+- 梯度检查点: 启用以节省内存
+- DeepSpeed: Zero2优化
+- Torch编译: 启用 torch_compile=True
+
+命令：Stage-2：sbatch scripts/streamvln_stage_two_train_slurm.sh
+
+这个三阶段训练策略使得StreamVLN能够从预训练的轨迹数据中学习基础导航能力，通过Dagger收集真实环境数据，最后在多任务设置下联合优化，实现强大的视觉语言导航能力。
+
+Key Differences Between Stages
+1. Stage One: Only uses pre-collected trajectory data (R2R, RxR, EnvDrop)
+2. Stage Two: Combines trajectory data + dagger collected data + multi-modal co-training data
+3. Multi-task Training: Only Stage Two enables --group_by_task True and --multi_task_training True
+4. Learning Rate: Stage One uses warmup_ratio 0.075, Stage Two uses 0.03
+5. Data Sources: Stage Two adds MMC4, ScanQA, and LLaVA-Video-178K datasets. 
+This three-stage approach allows the model to first learn basic navigation skills, then collect real-world interaction data, and finally fine-tune with multi-modal tasks for robust performance.
+
+阶段一:
+数据纯净，专注于 VLN 任务
+学习基础的视频-语言-动作映射
+阶段二:
+数据多样性最高
+多任务学习增强泛化能力
+混合原始轨迹 + Dagger 收集轨迹
