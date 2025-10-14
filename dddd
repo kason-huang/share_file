@@ -1,0 +1,50 @@
+{
+    'episodes' = [
+        {
+            'episode_id': 1,
+            'trajectory_id': 4,
+            'scene_id': 'mp3d/7y3sRwLe3Va/7y3sRwLe3Va.glb',
+            'instruction': {
+                'instruction_text': 'Go around the right side...',
+                'instruction_tokens': [982, 141, 2202, ..., 0, 0, 0]
+            },
+            'start_position': [-16.267200469970703, 0.1518409252166748, 0.7207760214805603],
+            'start_rotation': [0.0, 0.0007963267107332633, 0.0, 0.9999996829318346],
+            'goals': [
+                {
+                    'position': [-12.337400436401367, 0.1518409252166748, 4.213699817657471],
+                    'radius': 3.0
+                }
+            ],
+            'reference_path': [
+                [-16.267200469970703, 0.1518409252166748, 0.7207760214805603],
+                [-16.284099578857422, 0.1518409252166748, 2.4123699665069580],
+                ...
+                [-13.907199859619140, 0.1518409252166748, 4.2282099723815920],
+            ],
+            'info': {'geodesic_distance': 6.425291538238525},
+        },
+        ...
+    ],
+    'instruction_vocab': [
+        'word_list': [..., 'orchids', 'order', 'orient', ...],
+        'word2idx_dict': {
+            ...,
+            'orchids': 1505,
+            'order': 1506,
+            'orient': 1507,
+            ...
+        },
+        'itos': [..., 'orchids', 'order', 'orient', ...],
+        'stoi': {
+            ...,
+            'orchids': 1505,
+            'order': 1506,
+            'orient': 1507,
+            ...
+        },
+        'num_vocab': 2504,
+        'UNK_INDEX': 1,
+        'PAD_INDEX': 0,
+    ]
+}
