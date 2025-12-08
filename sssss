@@ -1,0 +1,4 @@
+dataset  total_episodes  unique_scenes  complete_episodes  data_completeness_rate  avg_action_length  avg_instructions
+    R2R            3603             61               3603                   100.0          60.887316          3.002775
+    RxR            6634             59               6634                   100.0          95.539795          2.998794
+EnvDrop          146304             60             146304                   100.0          68.575323          1.000000
