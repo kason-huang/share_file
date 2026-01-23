@@ -2,6 +2,7 @@
 
 import rclpy
 from rclpy.node import Node
+from rclpy.qos import QoSProfile, QoSReliabilityPolicy, QoSDurabilityPolicy
 from geometry_msgs.msg import Twist
 from nav_msgs.msg import Odometry
 from sensor_msgs.msg import LaserScan
@@ -13,10 +14,19 @@ class VLNActionExecutor(Node):
     def __init__(self):
         super().__init__('vln_action_executor')
         
-        # 发布与订阅
+        # === 配置与 O3DE 兼容的 QoS (关键修复!) ===
+        sensor_qos = QoSProfile(
+            reliability=QoSReliabilityPolicy.BEST_EFFORT,
+            durability=QoSDurabilityPolicy.VOLATILE,
+            depth=10
+        )
+        
+        # 发布 /cmd_vel（通常用默认 QoS 即可）
         self.cmd_pub = self.create_publisher(Twist, '/cmd_vel', 10)
-        self.odom_sub = self.create_subscription(Odometry, '/odom', self.odom_callback, 10)
-        self.scan_sub = self.create_subscription(LaserScan, '/scan', self.scan_callback, 10)
+        
+        # 订阅 /odom 和 /scan，使用 sensor_qos
+        self.odom_sub = self.create_subscription(Odometry, '/odom', self.odom_callback, sensor_qos)
+        self.scan_sub = self.create_subscription(LaserScan, '/scan', self.scan_callback, sensor_qos)
         
         # 状态变量
         self.curr_pose = None
@@ -30,6 +40,7 @@ class VLNActionExecutor(Node):
         self.COLLISION_THRESHOLD = 0.3  # 碰撞阈值 (米)
 
     def odom_callback(self, msg):
+        # 回调现在会被正常触发！
         self.curr_pose = msg.pose.pose
 
     def scan_callback(self, msg):
@@ -67,7 +78,7 @@ class VLNActionExecutor(Node):
     # ========================
     def execute_forward_25cm(self):
         if self.curr_pose is None:
-            self.get_logger().warn("未收到 /odom 数据，跳过精确前进。可使用 'f' 进行定时前进测试。")
+            self.get_logger().warn("尚未收到有效的 /odom 数据，跳过精确前进。")
             return
             
         self.get_logger().info("执行动作：前进 25cm（基于 odom）")
@@ -96,7 +107,7 @@ class VLNActionExecutor(Node):
 
     def execute_rotate_15deg(self, direction="left"):
         if self.curr_pose is None:
-            self.get_logger().warn("未收到 /odom 数据，跳过精确旋转。可使用 'l' 或 'r' 进行定时旋转测试。")
+            self.get_logger().warn("尚未收到有效的 /odom 数据，跳过精确旋转。")
             return
             
         angle_rad = math.radians(15) if direction == "left" else -math.radians(15)
@@ -134,10 +145,7 @@ class VLNActionExecutor(Node):
         
         start_time = time.time()
         while rclpy.ok() and (time.time() - start_time) < duration_sec:
-            # 即使没有 odom，也检查激光雷达（如果可用）
             rclpy.spin_once(self, timeout_sec=0)
-            
-            # 如果在定时过程中检测到碰撞，提前停止
             if self.collision_detected:
                 self.get_logger().warn("定时移动因碰撞提前终止")
                 break
@@ -160,9 +168,8 @@ def main():
     node = VLNActionExecutor()
     
     print("\n" + "="*50)
-    print("🚀 VLN 动作执行器已启动")
-    print("- 若有 /odom：使用 1/2/3 执行精确动作")
-    print("- 若无 /odom：使用 f/b/l/r 执行定时动作")
+    print("🚀 VLN 动作执行器（O3DE 仿真专用）已启动")
+    print("✅ 已修复 QoS 兼容性问题，可接收 /odom 数据")
     print("="*50)
     print("指令说明:")
     print("  1 : 前进 25cm (需 /odom)")
