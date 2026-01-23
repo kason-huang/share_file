@@ -14,17 +14,14 @@ class VLNActionExecutor(Node):
     def __init__(self):
         super().__init__('vln_action_executor')
         
-        # === 配置与 O3DE 兼容的 QoS (关键修复!) ===
+        # === QoS: 与 O3DE 的 SENSOR_DATA 兼容 ===
         sensor_qos = QoSProfile(
             reliability=QoSReliabilityPolicy.BEST_EFFORT,
             durability=QoSDurabilityPolicy.VOLATILE,
             depth=10
         )
         
-        # 发布 /cmd_vel（通常用默认 QoS 即可）
         self.cmd_pub = self.create_publisher(Twist, '/cmd_vel', 10)
-        
-        # 订阅 /odom 和 /scan，使用 sensor_qos
         self.odom_sub = self.create_subscription(Odometry, '/odom', self.odom_callback, sensor_qos)
         self.scan_sub = self.create_subscription(LaserScan, '/scan', self.scan_callback, sensor_qos)
         
@@ -34,14 +31,35 @@ class VLNActionExecutor(Node):
         self.collision_count = 0
         self.is_running = False
         
-        # 配置参数
-        self.LINEAR_SPEED = 0.1      # 前进速度 (m/s)
-        self.ANGULAR_SPEED = 0.3     # 旋转速度 (rad/s)
-        self.COLLISION_THRESHOLD = 0.3  # 碰撞阈值 (米)
+        # 参数
+        self.LINEAR_SPEED = 0.1
+        self.ANGULAR_SPEED = 0.3
+        self.COLLISION_THRESHOLD = 0.3
 
     def odom_callback(self, msg):
-        # 回调现在会被正常触发！
-        self.curr_pose = msg.pose.pose
+        """
+        只接受“有效”的 odom 消息：
+        - 时间戳 sec != 0（排除初始化零帧）
+        - 或位置明显非零（双重保险）
+        """
+        header = msg.header
+        pose = msg.pose.pose
+        pos = pose.position
+        
+        # 判断是否为有效时间戳（O3DE 物理启动后 stamp.sec > 0）
+        if header.stamp.sec == 0:
+            # 若时间戳无效，再检查是否是全零位姿（初始默认值）
+            quat = pose.orientation
+            is_zero_pose = (
+                abs(pos.x) < 1e-6 and abs(pos.y) < 1e-6 and abs(pos.z) < 1e-6 and
+                abs(quat.x) < 1e-6 and abs(quat.y) < 1e-6 and
+                abs(quat.z) < 1e-6 and abs(quat.w - 1.0) < 1e-3
+            )
+            if is_zero_pose:
+                return  # 忽略初始零帧
+        
+        # 接受有效数据
+        self.curr_pose = pose
 
     def scan_callback(self, msg):
         ranges = msg.ranges
@@ -73,12 +91,19 @@ class VLNActionExecutor(Node):
         cosy_cosp = 1 - 2 * (q.y * q.y + q.z * q.z)
         return math.atan2(siny_cosp, cosy_cosp)
 
-    # ========================
-    # 【依赖 /odom 的精确动作】
-    # ========================
+    def wait_for_odom(self, timeout_sec=5.0):
+        """主动等待有效的 odom 数据"""
+        self.get_logger().info("等待有效的 /odom 数据...")
+        start_time = time.time()
+        while rclpy.ok() and (time.time() - start_time) < timeout_sec:
+            if self.curr_pose is not None:
+                return True
+            rclpy.spin_once(self, timeout_sec=0.01)
+        return False
+
     def execute_forward_25cm(self):
-        if self.curr_pose is None:
-            self.get_logger().warn("尚未收到有效的 /odom 数据，跳过精确前进。")
+        if not self.wait_for_odom():
+            self.get_logger().error("超时：未收到有效的 /odom 数据，无法执行精确前进。")
             return
             
         self.get_logger().info("执行动作：前进 25cm（基于 odom）")
@@ -89,25 +114,21 @@ class VLNActionExecutor(Node):
         
         while rclpy.ok():
             rclpy.spin_once(self, timeout_sec=0)
-            
             dist = math.sqrt(
                 (self.curr_pose.position.x - start_x) ** 2 +
                 (self.curr_pose.position.y - start_y) ** 2
             )
-            
             if self.collision_detected or dist >= 0.25:
                 break
-                
             msg = Twist()
             msg.linear.x = self.LINEAR_SPEED
             self.cmd_pub.publish(msg)
             time.sleep(0.05)
-        
         self.stop_robot()
 
     def execute_rotate_15deg(self, direction="left"):
-        if self.curr_pose is None:
-            self.get_logger().warn("尚未收到有效的 /odom 数据，跳过精确旋转。")
+        if not self.wait_for_odom():
+            self.get_logger().error("超时：未收到有效的 /odom 数据，无法执行精确旋转。")
             return
             
         angle_rad = math.radians(15) if direction == "left" else -math.radians(15)
@@ -123,22 +144,15 @@ class VLNActionExecutor(Node):
             current_yaw = self.get_yaw()
             diff = target_yaw - current_yaw
             diff = math.atan2(math.sin(diff), math.cos(diff))
-            
             if abs(diff) < 0.02:
                 break
-                
             msg = Twist()
             msg.angular.z = self.ANGULAR_SPEED if diff > 0 else -self.ANGULAR_SPEED
             self.cmd_pub.publish(msg)
             time.sleep(0.05)
-        
         self.stop_robot()
 
-    # ========================
-    # 【不依赖 /odom 的定时动作】
-    # ========================
     def move_timed(self, linear_x=0.0, angular_z=0.0, duration_sec=1.0):
-        """按固定时间发送速度指令，无需 odom"""
         self.get_logger().info(f"执行定时移动: linear.x={linear_x}, angular.z={angular_z}, 持续 {duration_sec}s")
         self.is_running = True
         self.collision_detected = False
@@ -149,13 +163,11 @@ class VLNActionExecutor(Node):
             if self.collision_detected:
                 self.get_logger().warn("定时移动因碰撞提前终止")
                 break
-                
             msg = Twist()
             msg.linear.x = linear_x
             msg.angular.z = angular_z
             self.cmd_pub.publish(msg)
             time.sleep(0.05)
-        
         self.stop_robot()
 
     def stop_robot(self):
@@ -168,8 +180,7 @@ def main():
     node = VLNActionExecutor()
     
     print("\n" + "="*50)
-    print("🚀 VLN 动作执行器（O3DE 仿真专用）已启动")
-    print("✅ 已修复 QoS 兼容性问题，可接收 /odom 数据")
+    print("🚀 VLN 动作执行器（O3DE 仿真专用 - 已修复 odom 问题）")
     print("="*50)
     print("指令说明:")
     print("  1 : 前进 25cm (需 /odom)")
