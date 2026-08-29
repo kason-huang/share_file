@@ -1,0 +1,10 @@
+数据集	使用时长	机器人 / 硬件	任务类型简述
+Open X‑Embodiment（OXE，选取 Fractal、Bridge、BC‑Z 子集）	600h	Google Robot、WidowX（单臂）	单臂桌面操纵；抓取放置、简单桌面操作；筛选高质量子集使用
+AgiBotWorld‑Beta	2400h	AgiBot G1 双臂人形机器人	双臂人形真实世界操纵；约 200 种任务；家庭、零售、工业、餐饮、办公家务长时序移动操纵；灵巧夹爪采集
+RoboMIND + RoboMIND 2.0（合并）	1400h	RoboMIND：Franka Panda、UR5e、AgileX、Tien‑KungRoboMIND2.0 新增：ARX、Tian‑Yi，共 6 种平台	单臂、双臂桌面、移动操纵；固定基座精细双臂 + 轮式移动双臂；家庭、工业场景；部分带触觉；包含 ALOHA 数据
+Galaxea Open‑World Dataset	500h	Galaxea 自研双臂机器人	真实世界双臂移动操纵；大量家庭家务任务，导航 + 双臂操作耦合
+RoboCOIN	430h	10 种异构平台：AgiBot G1、Airbot MMK2、Alpha Bot2、AgileX、Unitree G1edu、Leju、Realman 系列、ALOHA、Tianqin A2	多形态双臂、人形机器人；跨平台真实世界操纵，任务覆盖面广
+DROID	500h（95k 轨迹）	Franka Panda 单臂	野外真实环境单臂桌面操纵；86 种真实环境，多样化日常任务
+RH20T	1100h	Flexiv、UR5、Franka、Kuka，4 种机器人	接触丰富的真实操纵；42 个技能大类、140 + 任务；多模态：视觉、力扭矩、音频、本体感知
+RDT‑1B	29h	ALOHA 双臂平台	ALOHA 双臂桌面示教，双臂协同操作
+InternData‑A1（仿真数据集）	3600h	仿真内多种单 / 双臂机器人	高保真仿真数据；抓取放置、铰接物体操作、长时序复合任务；纯合成仿真数据
